@@ -215,12 +215,81 @@ def show_main_interface():
         add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
         add_button.grid(row=5, columnspan=2, pady=10)
 
+    def show_update_data_form():
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Ошибка", "Пожалуйста, выберите запись для обновления")
+            return
+
+        item = tree.item(selected_item)
+        record = item['values']
+
+        update_window = tk.Toplevel(root)
+        update_window.title("Обновить данные")
+
+        tk.Label(update_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
+        name_entry = tk.Entry(update_window)
+        name_entry.insert(0, record[1])
+        name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+        tk.Label(update_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
+        email_entry = tk.Entry(update_window)
+        email_entry.insert(0, record[2])
+        email_entry.grid(row=1, column=1, padx=10, pady=5)
+
+        tk.Label(update_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
+        phone_entry = tk.Entry(update_window)
+        phone_entry.insert(0, record[3])
+        phone_entry.grid(row=2, column=1, padx=10, pady=5)
+
+        tk.Label(update_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
+        password_entry = tk.Entry(update_window, show="*")
+        password_entry.insert(0, record[4])
+        password_entry.grid(row=3, column=1, padx=10, pady=5)
+
+        tk.Label(update_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
+        privilege_entry = tk.Entry(update_window)
+        privilege_entry.insert(0, record[5])
+        privilege_entry.grid(row=4, column=1, padx=10, pady=5)
+
+        def update_data_to_db():
+            id = record[0]
+            name = name_entry.get()
+            email = email_entry.get()
+            phone = phone_entry.get()
+            password = password_entry.get()
+            privilege = privilege_entry.get()
+
+            conn = connect_db()
+            if not conn:
+                messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                return
+
+            cursor = conn.cursor()
+
+            try:
+                cursor.execute(
+                    "CALL update_customer(%s, %s, %s, %s, %s, %s)",
+                    (id, name, email, phone, password, privilege)
+                )
+                conn.commit()
+                messagebox.showinfo("Успех", "Данные успешно обновлены!")
+                update_window.destroy()
+                # Перезагрузите данные в основном интерфейсе, если необходимо
+            except Exception as e:
+                messagebox.showerror("Ошибка", f"Не удалось обновить данные: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+
+        update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+        update_button.grid(row=5, columnspan=2, pady=10)
+
     def add_data():
         show_add_data_form()
 
     def update_data():
-        # Добавьте здесь функциональность для обновления данных
-        pass
+        show_update_data_form()
 
     def delete_data():
         # Добавьте здесь функциональность для удаления данных
