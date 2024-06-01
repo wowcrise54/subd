@@ -1,0 +1,14 @@
+CREATE OR REPLACE PROCEDURE add_customer(
+    IN p_name VARCHAR,
+    IN p_email VARCHAR,
+    IN p_phone VARCHAR,
+    IN p_password VARCHAR,
+    IN p_privilege BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO customers (customer_name, customer_email, customer_phone, customers_password, customers_privellege)
+    VALUES (p_name, p_email, p_phone, p_password, p_privilege);
+END;
+$$;

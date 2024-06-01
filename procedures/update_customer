@@ -1,0 +1,20 @@
+CREATE OR REPLACE PROCEDURE update_customer(
+    IN p_id INTEGER,
+    IN p_name VARCHAR,
+    IN p_email VARCHAR,
+    IN p_phone VARCHAR,
+    IN p_password VARCHAR,
+    IN p_privilege BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE customers
+    SET customer_name = p_name,
+        customer_email = p_email,
+        customer_phone = p_phone,
+        customers_password = p_password,
+        customers_privellege = p_privilege
+    WHERE customer_id = p_id;
+END;
+$$;
