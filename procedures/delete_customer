@@ -1,0 +1,10 @@
+CREATE OR REPLACE PROCEDURE delete_customer(
+    IN p_id INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM customers
+    WHERE customer_id = p_id;
+END;
+$$;
