@@ -285,15 +285,36 @@ def show_main_interface():
         update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
         update_button.grid(row=5, columnspan=2, pady=10)
 
-    def add_data():
-        show_add_data_form()
-
-    def update_data():
-        show_update_data_form()
-
     def delete_data():
-        # Добавьте здесь функциональность для удаления данных
-        pass
+        selected_item = tree.selection()
+        if not selected_item:
+            messagebox.showerror("Ошибка", "Пожалуйста, выберите запись для удаления")
+            return
+
+        item = tree.item(selected_item)
+        record = item['values']
+        id = record[0]
+
+        conn = connect_db()
+        if not conn:
+            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            return
+
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute(
+                "CALL delete_customer(%s)",
+                (id,)
+            )
+            conn.commit()
+            messagebox.showinfo("Успех", "Данные успешно удалены!")
+            tree.delete(selected_item)
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось удалить данные: {e}")
+        finally:
+            cursor.close()
+            conn.close()
 
     tree = ttk.Treeview(frame, columns=("ID", "Name", "Email", "Phone", "Password", "Privilege"), show="headings")
     tree.heading("ID", text="ID")
@@ -307,10 +328,10 @@ def show_main_interface():
     view_button = tk.Button(frame, text="Просмотреть данные", command=view_data)
     view_button.pack()
 
-    add_button = tk.Button(frame, text="Добавить данные", command=add_data)
+    add_button = tk.Button(frame, text="Добавить данные", command=show_add_data_form)
     add_button.pack()
 
-    update_button = tk.Button(frame, text="Обновить данные", command=update_data)
+    update_button = tk.Button(frame, text="Обновить данные", command=show_update_data_form)
     update_button.pack()
 
     delete_button = tk.Button(frame, text="Удалить данные", command=delete_data)
