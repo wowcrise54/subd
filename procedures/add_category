@@ -1,0 +1,10 @@
+CREATE OR REPLACE PROCEDURE add_category(
+    IN p_category VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO categories (category_name)
+    VALUES (p_category);
+END;
+$$;

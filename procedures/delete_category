@@ -1,0 +1,10 @@
+CREATE OR REPLACE PROCEDURE delete_category(
+    IN p_id INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM categories
+    WHERE category_id = p_id;
+END;
+$$;

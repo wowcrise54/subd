@@ -1,0 +1,12 @@
+CREATE OR REPLACE PROCEDURE update_category(
+    IN p_id INTEGER,
+    IN p_category VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE categories
+    SET category_name = p_category
+    WHERE category_id = p_id;
+END;
+$$;

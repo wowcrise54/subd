@@ -142,7 +142,7 @@ def show_main_interface():
 
     table_label = tk.Label(frame, text="Выберите таблицу:")
     table_label.grid(row=0, column=0, padx=10, pady=5)
-    table_choice = ttk.Combobox(frame, values=["customers", "orders", "products"])
+    table_choice = ttk.Combobox(frame, values=["customers", "orders", "products", "categories", "orderdate"])
     table_choice.grid(row=0, column=1, padx=10, pady=5)
     table_choice.current(0)  # Установить значение по умолчанию
 
@@ -223,7 +223,69 @@ def show_main_interface():
             add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
             add_button.grid(row=5, columnspan=2, pady=10)
 
-        # Добавьте формы для других таблиц аналогично
+        elif table == "categories":
+            tk.Label(add_window, text="Название категории:").grid(row=0, column=0, padx=10, pady=5)
+            category_name_entry = tk.Entry(add_window)
+            category_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            def add_data_to_db():
+                category_name = category_name_entry.get()
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL add_category(%s)",
+                        (category_name,)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Категория успешно добавлена!")
+                    add_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось добавить категорию: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button.grid(row=1, columnspan=2, pady=10)
+
+        elif table == "orderdate":
+            tk.Label(add_window, text="Дата заказа:").grid(row=0, column=0, padx=10, pady=5)
+            order_date_entry = tk.Entry(add_window)
+            order_date_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            def add_data_to_db():
+                order_date = order_date_entry.get()
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL add_orderdate(%s)",
+                        (order_date,)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Дата заказа успешно добавлена!")
+                    add_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось добавить дату заказа: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button.grid(row=1, columnspan=2, pady=10)
 
     def show_update_data_form():
         selected_item = tree.selection()
@@ -231,69 +293,138 @@ def show_main_interface():
             messagebox.showerror("Ошибка", "Пожалуйста, выберите запись для обновления")
             return
 
+        table = table_choice.get()
         item = tree.item(selected_item)
         record = item['values']
 
         update_window = tk.Toplevel(root)
         update_window.title("Обновить данные")
 
-        tk.Label(update_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
-        name_entry = tk.Entry(update_window)
-        name_entry.insert(0, record[1])
-        name_entry.grid(row=0, column=1, padx=10, pady=5)
+        if table == "customers":
+            tk.Label(update_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
+            name_entry = tk.Entry(update_window)
+            name_entry.insert(0, record[1])
+            name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-        tk.Label(update_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
-        email_entry = tk.Entry(update_window)
-        email_entry.insert(0, record[2])
-        email_entry.grid(row=1, column=1, padx=10, pady=5)
+            tk.Label(update_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
+            email_entry = tk.Entry(update_window)
+            email_entry.insert(0, record[2])
+            email_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Label(update_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
-        phone_entry = tk.Entry(update_window)
-        phone_entry.insert(0, record[3])
-        phone_entry.grid(row=2, column=1, padx=10, pady=5)
+            tk.Label(update_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
+            phone_entry = tk.Entry(update_window)
+            phone_entry.insert(0, record[3])
+            phone_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        tk.Label(update_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
-        password_entry = tk.Entry(update_window, show="*")
-        password_entry.insert(0, record[4])
-        password_entry.grid(row=3, column=1, padx=10, pady=5)
+            tk.Label(update_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
+            password_entry = tk.Entry(update_window, show="*")
+            password_entry.insert(0, record[4])
+            password_entry.grid(row=3, column=1, padx=10, pady=5)
 
-        tk.Label(update_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
-        privilege_entry = tk.Entry(update_window)
-        privilege_entry.insert(0, record[5])
-        privilege_entry.grid(row=4, column=1, padx=10, pady=5)
+            tk.Label(update_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
+            privilege_entry = tk.Entry(update_window)
+            privilege_entry.insert(0, record[5])
+            privilege_entry.grid(row=4, column=1, padx=10, pady=5)
 
-        def update_data_to_db():
-            id = record[0]
-            name = name_entry.get()
-            email = email_entry.get()
-            phone = phone_entry.get()
-            password = password_entry.get()
-            privilege = privilege_entry.get()
+            def update_data_to_db():
+                id = record[0]
+                name = name_entry.get()
+                email = email_entry.get()
+                phone = phone_entry.get()
+                password = password_entry.get()
+                privilege = privilege_entry.get()
 
-            conn = connect_db()
-            if not conn:
-                messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
-                return
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
 
-            cursor = conn.cursor()
+                cursor = conn.cursor()
 
-            try:
-                cursor.execute(
-                    "CALL update_customer(%s, %s, %s, %s, %s, %s)",
-                    (id, name, email, phone, password, privilege)
-                )
-                conn.commit()
-                messagebox.showinfo("Успех", "Данные успешно обновлены!")
-                update_window.destroy()
-                # Перезагрузите данные в основном интерфейсе, если необходимо
-            except Exception as e:
-                messagebox.showerror("Ошибка", f"Не удалось обновить данные: {e}")
-            finally:
-                cursor.close()
-                conn.close()
+                try:
+                    cursor.execute(
+                        "CALL update_customer(%s, %s, %s, %s, %s, %s)",
+                        (id, name, email, phone, password, privilege)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Данные успешно обновлены!")
+                    update_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось обновить данные: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
 
-        update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
-        update_button.grid(row=5, columnspan=2, pady=10)
+            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button.grid(row=5, columnspan=2, pady=10)
+
+        elif table == "categories":
+            tk.Label(update_window, text="Название категории:").grid(row=0, column=0, padx=10, pady=5)
+            category_name_entry = tk.Entry(update_window)
+            category_name_entry.insert(0, record[1])
+            category_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            def update_data_to_db():
+                id = record[0]
+                category_name = category_name_entry.get()
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL update_category(%s, %s)",
+                        (id, category_name)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Категория успешно обновлена!")
+                    update_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось обновить категорию: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button.grid(row=1, columnspan=2, pady=10)
+
+        elif table == "orderdate":
+            tk.Label(update_window, text="Дата заказа:").grid(row=0, column=0, padx=10, pady=5)
+            order_date_entry = tk.Entry(update_window)
+            order_date_entry.insert(0, record[1])
+            order_date_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            def update_data_to_db():
+                id = record[0]
+                order_date = order_date_entry.get()
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL update_orderdate(%s, %s)",
+                        (id, order_date)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Дата заказа успешно обновлена!")
+                    update_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось обновить дату заказа: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button.grid(row=1, columnspan=2, pady=10)
 
     def delete_data():
         selected_item = tree.selection()
@@ -301,6 +432,7 @@ def show_main_interface():
             messagebox.showerror("Ошибка", "Пожалуйста, выберите запись для удаления")
             return
 
+        table = table_choice.get()
         item = tree.item(selected_item)
         record = item['values']
         id = record[0]
@@ -313,10 +445,12 @@ def show_main_interface():
         cursor = conn.cursor()
 
         try:
-            cursor.execute(
-                "CALL delete_customer(%s)",
-                (id,)
-            )
+            if table == "customers":
+                cursor.execute("CALL delete_customer(%s)", (id,))
+            elif table == "categories":
+                cursor.execute("CALL delete_category(%s)", (id,))
+            elif table == "orderdate":
+                cursor.execute("CALL delete_orderdate(%s)", (id,))
             conn.commit()
             messagebox.showinfo("Успех", "Данные успешно удалены!")
             tree.delete(selected_item)
