@@ -82,24 +82,24 @@ def show_register_form():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
     
-    tk.Label(frame, text="Имя пользователя:").place(x=0, y=10)
+    tk.Label(frame, text="Имя пользователя:").grid(row=0, column=0, padx=10, pady=5)
     username_entry = tk.Entry(frame)
-    username_entry.place(x=120, y=10)
+    username_entry.grid(row=0, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Пароль:").place(x=0, y=40)
+    tk.Label(frame, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
     password_entry = tk.Entry(frame, show="*")
-    password_entry.place(x=120, y=40)
+    password_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    tk.Label(frame, text="Email:").place(x=0, y=70)
+    tk.Label(frame, text="Email:").grid(row=2, column=0, padx=10, pady=5)
     email_entry = tk.Entry(frame)
-    email_entry.place(x=120, y=70)
+    email_entry.grid(row=2, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Телефон:").place(x=0, y=100)
+    tk.Label(frame, text="Телефон:").grid(row=3, column=0, padx=10, pady=5)
     phone_entry = tk.Entry(frame)
-    phone_entry.place(x=120, y=100)
+    phone_entry.grid(row=3, column=1, padx=10, pady=5)
     
     register_button = tk.Button(frame, text="Зарегистрироваться", command=register)
-    register_button.place(x=75, y=130)
+    register_button.grid(row=4, columnspan=2, pady=10)
     
     login_label = tk.Label(root, text="Уже есть аккаунт? ")
     login_label.place(relx=0.5, rely=0.85, anchor='e')
@@ -116,16 +116,16 @@ def show_login_form():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
     
-    tk.Label(frame, text="Имя пользователя:").place(x=0, y=10)
+    tk.Label(frame, text="Имя пользователя:").grid(row=0, column=0, padx=10, pady=5)
     username_entry = tk.Entry(frame)
-    username_entry.place(x=120, y=10)
+    username_entry.grid(row=0, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Пароль:").place(x=0, y=40)
+    tk.Label(frame, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
     password_entry = tk.Entry(frame, show="*")
-    password_entry.place(x=120, y=40)
+    password_entry.grid(row=1, column=1, padx=10, pady=5)
     
     login_button = tk.Button(frame, text="Войти", command=login)
-    login_button.place(x=75, y=70)
+    login_button.grid(row=2, columnspan=2, pady=10)
     
     register_label = tk.Label(root, text="Нет аккаунта? ")
     register_label.place(relx=0.5, rely=0.85, anchor='e')
@@ -140,7 +140,14 @@ def show_main_interface():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
 
+    table_label = tk.Label(frame, text="Выберите таблицу:")
+    table_label.grid(row=0, column=0, padx=10, pady=5)
+    table_choice = ttk.Combobox(frame, values=["customers", "orders", "products"])
+    table_choice.grid(row=0, column=1, padx=10, pady=5)
+    table_choice.current(0)  # Установить значение по умолчанию
+
     def view_data():
+        table = table_choice.get()
         conn = connect_db()
         if not conn:
             messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
@@ -148,8 +155,7 @@ def show_main_interface():
 
         cursor = conn.cursor()
         try:
-            cursor.execute('CALL get_all_customers()')
-            cursor.execute("FETCH ALL IN customer_cursor")
+            cursor.execute(f'SELECT * FROM {table}')
             rows = cursor.fetchall()
             for row in rows:
                 tree.insert("", tk.END, values=row)
@@ -160,60 +166,64 @@ def show_main_interface():
             conn.close()
 
     def show_add_data_form():
+        table = table_choice.get()
         add_window = tk.Toplevel(root)
         add_window.title("Добавить данные")
 
-        tk.Label(add_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
-        name_entry = tk.Entry(add_window)
-        name_entry.grid(row=0, column=1, padx=10, pady=5)
+        if table == "customers":
+            tk.Label(add_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
+            name_entry = tk.Entry(add_window)
+            name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-        tk.Label(add_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
-        email_entry = tk.Entry(add_window)
-        email_entry.grid(row=1, column=1, padx=10, pady=5)
+            tk.Label(add_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
+            email_entry = tk.Entry(add_window)
+            email_entry.grid(row=1, column=1, padx=10, pady=5)
 
-        tk.Label(add_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
-        phone_entry = tk.Entry(add_window)
-        phone_entry.grid(row=2, column=1, padx=10, pady=5)
+            tk.Label(add_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
+            phone_entry = tk.Entry(add_window)
+            phone_entry.grid(row=2, column=1, padx=10, pady=5)
 
-        tk.Label(add_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
-        password_entry = tk.Entry(add_window, show="*")
-        password_entry.grid(row=3, column=1, padx=10, pady=5)
+            tk.Label(add_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
+            password_entry = tk.Entry(add_window, show="*")
+            password_entry.grid(row=3, column=1, padx=10, pady=5)
 
-        tk.Label(add_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
-        privilege_entry = tk.Entry(add_window)
-        privilege_entry.grid(row=4, column=1, padx=10, pady=5)
+            tk.Label(add_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
+            privilege_entry = tk.Entry(add_window)
+            privilege_entry.grid(row=4, column=1, padx=10, pady=5)
 
-        def add_data_to_db():
-            name = name_entry.get()
-            email = email_entry.get()
-            phone = phone_entry.get()
-            password = password_entry.get()
-            privilege = privilege_entry.get()
+            def add_data_to_db():
+                name = name_entry.get()
+                email = email_entry.get()
+                phone = phone_entry.get()
+                password = password_entry.get()
+                privilege = privilege_entry.get()
 
-            conn = connect_db()
-            if not conn:
-                messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
-                return
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
 
-            cursor = conn.cursor()
+                cursor = conn.cursor()
 
-            try:
-                cursor.execute(
-                    "CALL add_customer(%s, %s, %s, %s, %s)",
-                    (name, email, phone, password, privilege)
-                )
-                conn.commit()
-                messagebox.showinfo("Успех", "Данные успешно добавлены!")
-                add_window.destroy()
-                # Перезагрузите данные в основном интерфейсе, если необходимо
-            except Exception as e:
-                messagebox.showerror("Ошибка", f"Не удалось добавить данные: {e}")
-            finally:
-                cursor.close()
-                conn.close()
+                try:
+                    cursor.execute(
+                        "CALL add_customer(%s, %s, %s, %s, %s)",
+                        (name, email, phone, password, privilege)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Данные успешно добавлены!")
+                    add_window.destroy()
+                    # Перезагрузите данные в основном интерфейсе, если необходимо
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось добавить данные: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
 
-        add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
-        add_button.grid(row=5, columnspan=2, pady=10)
+            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button.grid(row=5, columnspan=2, pady=10)
+
+        # Добавьте формы для других таблиц аналогично
 
     def show_update_data_form():
         selected_item = tree.selection()
@@ -323,19 +333,19 @@ def show_main_interface():
     tree.heading("Phone", text="Phone")
     tree.heading("Password", text="Password")
     tree.heading("Privilege", text="Privilege")
-    tree.pack()
+    tree.grid(row=1, columnspan=2, pady=10)
 
     view_button = tk.Button(frame, text="Просмотреть данные", command=view_data)
-    view_button.pack()
+    view_button.grid(row=2, column=0, padx=10, pady=5)
 
     add_button = tk.Button(frame, text="Добавить данные", command=show_add_data_form)
-    add_button.pack()
+    add_button.grid(row=2, column=1, padx=10, pady=5)
 
     update_button = tk.Button(frame, text="Обновить данные", command=show_update_data_form)
-    update_button.pack()
+    update_button.grid(row=3, column=0, padx=10, pady=5)
 
     delete_button = tk.Button(frame, text="Удалить данные", command=delete_data)
-    delete_button.pack()
+    delete_button.grid(row=3, column=1, padx=10, pady=5)
 
 # Создаем главное окно
 root = tk.Tk()
