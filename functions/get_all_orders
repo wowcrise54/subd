@@ -1,0 +1,29 @@
+CREATE OR REPLACE FUNCTION get_all_orders()
+RETURNS TABLE (
+    customer_name VARCHAR,
+    product_name VARCHAR,
+    order_date TIMESTAMP WITHOUT TIME ZONE,
+    quantity INTEGER,
+    total_amount DECIMAL
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        o.order_id,
+        c.customer_name,
+        p.product_name,
+        od.order_date,
+        o.quantity,
+        o.total_amount
+    FROM
+        orders o
+    JOIN
+        customers c ON o.customer_id = c.customer_id
+    JOIN
+        products p ON o.product_id = p.product_id
+    JOIN
+        order_dates od ON o.order_date_id = od.order_date_id;
+END;
+$$;

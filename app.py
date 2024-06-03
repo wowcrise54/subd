@@ -20,7 +20,7 @@ def connect_db():
         conn = psycopg2.connect(
             dbname="auto_parts_store",
             user="postgres",
-            password="Tusson112",
+            password="postgres",
             host="127.0.0.1",
             port="5432"
         )

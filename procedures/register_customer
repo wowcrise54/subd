@@ -1,0 +1,21 @@
+CREATE OR REPLACE PROCEDURE register_customer(
+    IN p_username VARCHAR,
+    IN p_email VARCHAR,
+    IN p_phone VARCHAR,
+    IN p_password VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Проверка на существование пользователя с таким же именем или email
+    IF EXISTS (SELECT 1 FROM customers WHERE customer_name = p_username) THEN
+        RAISE EXCEPTION 'Пользователь с таким именем уже существует';
+    ELSIF EXISTS (SELECT 1 FROM customers WHERE customer_email = p_email) THEN
+        RAISE EXCEPTION 'Пользователь с таким email уже существует';
+    ELSE
+        -- Вставка нового пользователя
+        INSERT INTO customers (customer_name, customer_email, customer_phone, customers_password)
+        VALUES (p_username, p_email, p_phone, p_password);
+    END IF;
+END;
+$$;

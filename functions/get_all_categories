@@ -1,0 +1,12 @@
+CREATE OR REPLACE FUNCTION get_all_categories()
+RETURNS TABLE (
+	name VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT	category_name
+			FROM categories;
+END;
+$$;

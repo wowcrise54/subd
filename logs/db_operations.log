@@ -110,3 +110,7 @@ LINE 1: SELECT * FROM customers WHERE Name::text ILIKE '%admin%'
 2024-06-03 12:16:37,400 - INFO - РџРѕР»СЊР·РѕРІР°С‚РµР»СЊ admin СѓСЃРїРµС€РЅРѕ РІРѕС€РµР» РІ СЃРёСЃС‚РµРјСѓ
 2024-06-03 12:16:52,211 - INFO - РџРѕРґРєР»СЋС‡РµРЅРёРµ Рє Р±Р°Р·Рµ РґР°РЅРЅС‹С… СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ
 2024-06-03 12:16:52,217 - INFO - РџСЂРѕСЃРјРѕС‚СЂ РґР°РЅРЅС‹С… РёР· С‚Р°Р±Р»РёС†С‹: customers
+2024-06-04 01:02:57,593 - ERROR - Ошибка подключения к базе данных: connection to server at "127.0.0.1", port 5432 failed: FATAL:  password authentication failed for user "postgres"
+
+2024-06-04 01:03:27,811 - ERROR - Ошибка подключения к базе данных: connection to server at "127.0.0.1", port 5432 failed: FATAL:  password authentication failed for user "postgres"
+

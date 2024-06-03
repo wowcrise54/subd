@@ -1,0 +1,12 @@
+CREATE OR REPLACE FUNCTION get_all_orderdate()
+RETURNS TABLE (
+	order_date TIMESTAMP WITHOUT TIME ZONE
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT	order_date
+	FROM orderdate;
+END;
+$$;

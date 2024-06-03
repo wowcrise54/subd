@@ -1,0 +1,16 @@
+CREATE OR REPLACE FUNCTION get_all_products()
+RETURNS TABLE (
+	name VARCHAR,
+	category INT,
+	price MONEY
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT	product_name,
+			product_category,
+			product_price
+	FROM products;
+END;
+$$;

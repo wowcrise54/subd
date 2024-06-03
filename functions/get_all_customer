@@ -1,0 +1,20 @@
+CREATE OR REPLACE FUNCTION get_all_customers()
+RETURNS TABLE (
+    username VARCHAR,
+    email VARCHAR,
+    phone VARCHAR,
+    password VARCHAR,
+    privilege INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT	customer_name,
+			customer_email,
+			customer_phone,
+			customers_password,
+			customers_privellege
+			FROM customers;
+END;
+$$;

@@ -1,9 +1,0 @@
-CREATE OR REPLACE PROCEDURE get_all_customers()
-LANGUAGE plpgsql
-AS $$
-DECLARE 
-	cur refcursor := 'customer_cursor';
-BEGIN
-    OPEN cur FOR SELECT * FROM Customers;
-END;
-$$;

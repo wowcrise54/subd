@@ -1,9 +1,0 @@
-CREATE OR REPLACE PROCEDURE get_all_categories()
-LANGUAGE plpgsql
-AS $$
-DECLARE 
-	cur refcursor := 'categories_cursor';
-BEGIN
-    OPEN cur FOR SELECT * FROM categories;
-END;
-$$;

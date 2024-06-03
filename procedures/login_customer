@@ -1,0 +1,16 @@
+CREATE OR REPLACE PROCEDURE login_customer(
+    IN p_username VARCHAR,
+    IN p_password VARCHAR,
+    OUT p_is_authenticated BOOLEAN
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    -- Проверка существования пользователя с указанными именем и паролем
+    SELECT EXISTS (
+        SELECT 1
+        FROM customers
+        WHERE customer_name = p_username AND password = p_password
+    ) INTO p_is_authenticated;
+END;
+$$;
