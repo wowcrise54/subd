@@ -1,0 +1,10 @@
+CREATE OR REPLACE PROCEDURE delete_product(
+    IN p_id INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM products
+    WHERE product_id = p_id;
+END;
+$$;

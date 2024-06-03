@@ -1,0 +1,10 @@
+CREATE OR REPLACE PROCEDURE delete_orderdate(
+    IN p_id INTEGER
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    DELETE FROM orderdate
+    WHERE date_id = p_id;
+END;
+$$;

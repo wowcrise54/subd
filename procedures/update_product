@@ -1,0 +1,16 @@
+CREATE OR REPLACE PROCEDURE update_product(
+    IN p_id INTEGER,
+    IN p_name VARCHAR,
+    IN p_category VARCHAR,
+    IN p_price INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE products
+    SET product_name = p_name,
+        product_category = p_category,
+        product_price = p_price
+    WHERE product_id = p_id;
+END;
+$$;

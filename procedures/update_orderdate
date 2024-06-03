@@ -1,0 +1,12 @@
+CREATE OR REPLACE PROCEDURE update_orderdate(
+    IN p_id INTEGER,
+    IN p_order_date VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE categories
+    SET order_date = p_order_date
+    WHERE date_id = p_id;
+END;
+$$;

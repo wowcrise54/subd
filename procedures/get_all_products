@@ -1,0 +1,9 @@
+CREATE OR REPLACE PROCEDURE get_all_products()
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+	cur refcursor := 'product_cursor';
+BEGIN
+    OPEN cur FOR SELECT * FROM products;
+END;
+$$;

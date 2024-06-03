@@ -1,0 +1,9 @@
+CREATE OR REPLACE PROCEDURE get_all_orderdate()
+LANGUAGE plpgsql
+AS $$
+DECLARE 
+	cur refcursor := 'orderdate_cursor';
+BEGIN
+    OPEN cur FOR SELECT * FROM orderdate;
+END;
+$$;

@@ -165,6 +165,24 @@ def show_main_interface():
             cursor.close()
             conn.close()
 
+    def get_categories():
+        conn = connect_db()
+        if not conn:
+            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            return []
+        
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT category_id, category_name FROM categories")
+            categories = cursor.fetchall()
+            return categories
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось получить категории: {e}")
+            return []
+        finally:
+            cursor.close()
+            conn.close()
+
     def show_add_data_form():
         table = table_choice.get()
         add_window = tk.Toplevel(root)
@@ -286,6 +304,48 @@ def show_main_interface():
 
             add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
             add_button.grid(row=1, columnspan=2, pady=10)
+
+        elif table == "products":
+            tk.Label(add_window, text="Название продукта:").grid(row=0, column=0, padx=10, pady=5)
+            product_name_entry = tk.Entry(add_window)
+            product_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            tk.Label(add_window, text="Цена:").grid(row=1, column=0, padx=10, pady=5)
+            price_entry = tk.Entry(add_window)
+            price_entry.grid(row=1, column=1, padx=10, pady=5)
+
+            tk.Label(add_window, text="Категория:").grid(row=2, column=0, padx=10, pady=5)
+            category_choice = ttk.Combobox(add_window, values=[cat[1] for cat in get_categories()])
+            category_choice.grid(row=2, column=1, padx=10, pady=5)
+
+            def add_data_to_db():
+                product_name = product_name_entry.get()
+                price = price_entry.get()
+                category_name = category_choice.get()  # Получаем название категории
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL add_product(%s, %s, %s)",
+                        (product_name, category_name, price)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Продукт успешно добавлен!")
+                    add_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось добавить продукт: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button.grid(row=3, columnspan=2, pady=10)
 
     def show_update_data_form():
         selected_item = tree.selection()
@@ -426,6 +486,52 @@ def show_main_interface():
             update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
             update_button.grid(row=1, columnspan=2, pady=10)
 
+        elif table == "products":
+            tk.Label(update_window, text="Название продукта:").grid(row=0, column=0, padx=10, pady=5)
+            product_name_entry = tk.Entry(update_window)
+            product_name_entry.insert(0, record[1])
+            product_name_entry.grid(row=0, column=1, padx=10, pady=5)
+
+            tk.Label(update_window, text="Цена:").grid(row=1, column=0, padx=10, pady=5)
+            price_entry = tk.Entry(update_window)
+            price_entry.insert(0, record[2])
+            price_entry.grid(row=1, column=1, padx=10, pady=5)
+
+            tk.Label(update_window, text="Категория:").grid(row=2, column=0, padx=10, pady=5)
+            category_choice = ttk.Combobox(update_window, values=[cat[1] for cat in get_categories()])
+            category_choice.grid(row=2, column=1, padx=10, pady=5)
+            category_choice.set(record[3])
+
+            def update_data_to_db():
+                id = record[0]
+                product_name = product_name_entry.get()
+                price = price_entry.get()
+                category_name = category_choice.get()  # Получаем название категории
+
+                conn = connect_db()
+                if not conn:
+                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    return
+
+                cursor = conn.cursor()
+
+                try:
+                    cursor.execute(
+                        "CALL update_product(%s, %s, %s, %s)",
+                        (id, product_name, price, category_name)
+                    )
+                    conn.commit()
+                    messagebox.showinfo("Успех", "Продукт успешно обновлен!")
+                    update_window.destroy()
+                except Exception as e:
+                    messagebox.showerror("Ошибка", f"Не удалось обновить продукт: {e}")
+                finally:
+                    cursor.close()
+                    conn.close()
+
+            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button.grid(row=3, columnspan=2, pady=10)
+
     def delete_data():
         selected_item = tree.selection()
         if not selected_item:
@@ -451,6 +557,8 @@ def show_main_interface():
                 cursor.execute("CALL delete_category(%s)", (id,))
             elif table == "orderdate":
                 cursor.execute("CALL delete_orderdate(%s)", (id,))
+            elif table == "products":
+                cursor.execute("CALL delete_product(%s)", (id,))
             conn.commit()
             messagebox.showinfo("Успех", "Данные успешно удалены!")
             tree.delete(selected_item)
