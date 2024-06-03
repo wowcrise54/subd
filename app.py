@@ -1,4 +1,5 @@
 import os
+import json
 import tkinter as tk
 from tkinter import messagebox, ttk, filedialog, scrolledtext
 import psycopg2
@@ -146,7 +147,7 @@ def show_login_form():
     
     register_label = tk.Label(root, text="Нет аккаунта? ")
     register_label.place(relx=0.5, rely=0.85, anchor='e')
-    register_link = tk.Label(root, текст="Зарегистрироваться", fg="blue", cursor="hand2")
+    register_link = tk.Label(root, text="Зарегистрироваться", fg="blue", cursor="hand2")
     register_link.place(relx=0.5, rely=0.85, anchor='w')
     register_link.bind("<Button-1>", lambda e: show_register_form())
 
@@ -163,8 +164,21 @@ def show_main_interface():
     table_choice.grid(row=0, column=1, padx=10, pady=5)
     table_choice.current(0)  # Установить значение по умолчанию
 
+    search_label = tk.Label(frame, text="Поиск:")
+    search_label.grid(row=1, column=0, padx=10, pady=5)
+    search_entry = tk.Entry(frame)
+    search_entry.grid(row=1, column=1, padx=10, pady=5)
+
+    column_label = tk.Label(frame, text="Колонка:")
+    column_label.grid(row=2, column=0, padx=10, pady=5)
+    column_choice = ttk.Combobox(frame, values=["customer_id", "customer_name", "customer_email", "customer_phone", "customers_password", "customers_privellege"])
+    column_choice.grid(row=2, column=1, padx=10, pady=5)
+    column_choice.current(0)  # Установить значение по умолчанию
+
     def view_data():
         table = table_choice.get()
+        search_query = search_entry.get()
+        column = column_choice.get()
         conn = connect_db()
         if not conn:
             messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
@@ -172,7 +186,11 @@ def show_main_interface():
 
         cursor = conn.cursor()
         try:
-            cursor.execute(f'SELECT * FROM {table}')
+            tree.delete(*tree.get_children())
+            if search_query:
+                cursor.execute(f"SELECT * FROM {table} WHERE {column}::text ILIKE %s", (f'%{search_query}%',))
+            else:
+                cursor.execute(f'SELECT * FROM {table}')
             rows = cursor.fetchall()
             for row in rows:
                 tree.insert("", tk.END, values=row)
@@ -193,17 +211,17 @@ def show_main_interface():
 
         cursor = conn.cursor()
         try:
-            cursor.execute(f'SELECT * FROM {table}')
+            cursor.execute(f"SELECT * FROM {table}")
             rows = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
             df = pd.DataFrame(rows, columns=columns)
-            file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+            file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx"), ("All files", "*.*")])
             if file_path:
                 df.to_excel(file_path, index=False)
-                logging.info(f"Экспорт данных из таблицы {table} в файл {file_path}")
-                messagebox.showinfo("Успех", f"Данные успешно экспортированы в {file_path}")
+                logging.info(f"Данные из таблицы {table} экспортированы в {file_path}")
+                messagebox.showinfo("Успех", f"Данные экспортированы в {file_path}")
         except Exception as e:
-            logging.error(f"Ошибка экспорта данных из таблицы {table} в файл Excel: {e}")
+            logging.error(f"Ошибка экспорта данных из таблицы {table}: {e}")
             messagebox.showerror("Ошибка", f"Не удалось экспортировать данные: {e}")
         finally:
             cursor.close()
@@ -641,8 +659,36 @@ def show_main_interface():
         try:
             with open(os.path.join(log_folder, 'db_operations.log'), 'r') as log_file:
                 st.insert(tk.END, log_file.read())
+            logging.info("Просмотр истории операций")
         except Exception as e:
-            messagebox.showerror("Ошибка", f"Не удалось загрузить лог-файл: {e}")
+            logging.error(f"Ошибка при просмотре истории операций: {e}")
+            messagebox.showerror("Ошибка", f"Не удалось загрузить историю операций: {e}")
+
+    def view_audit_log():
+        audit_window = tk.Toplevel(root)
+        audit_window.title("История аудита")
+
+        st = scrolledtext.ScrolledText(audit_window, width=100, height=30)
+        st.pack(padx=10, pady=10)
+
+        conn = connect_db()
+        if not conn:
+            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            return
+
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT * FROM audit_log ORDER BY timestamp DESC")
+            rows = cursor.fetchall()
+            for row in rows:
+                st.insert(tk.END, f"{row}\n")
+            logging.info("Просмотр истории аудита")
+        except Exception as e:
+            logging.error(f"Ошибка при просмотре истории аудита: {e}")
+            messagebox.showerror("Ошибка", f"Не удалось получить данные аудита: {e}")
+        finally:
+            cursor.close()
+            conn.close()
 
     tree = ttk.Treeview(frame, columns=("ID", "Name", "Email", "Phone", "Password", "Privilege"), show="headings")
     tree.heading("ID", text="ID")
@@ -651,25 +697,28 @@ def show_main_interface():
     tree.heading("Phone", text="Phone")
     tree.heading("Password", text="Password")
     tree.heading("Privilege", text="Privilege")
-    tree.grid(row=1, columnspan=2, pady=10)
+    tree.grid(row=3, columnspan=2, pady=10)
 
     view_button = tk.Button(frame, text="Просмотреть данные", command=view_data)
-    view_button.grid(row=2, column=0, padx=10, pady=5)
+    view_button.grid(row=4, column=0, padx=10, pady=5)
 
     add_button = tk.Button(frame, text="Добавить данные", command=show_add_data_form)
-    add_button.grid(row=2, column=1, padx=10, pady=5)
+    add_button.grid(row=4, column=1, padx=10, pady=5)
 
     update_button = tk.Button(frame, text="Обновить данные", command=show_update_data_form)
-    update_button.grid(row=3, column=0, padx=10, pady=5)
+    update_button.grid(row=5, column=0, padx=10, pady=5)
 
     delete_button = tk.Button(frame, text="Удалить данные", command=delete_data)
-    delete_button.grid(row=3, column=1, padx=10, pady=5)
+    delete_button.grid(row=5, column=1, padx=10, pady=5)
 
     export_button = tk.Button(frame, text="Экспорт в WPS Office", command=export_to_excel)
-    export_button.grid(row=4, columnspan=2, pady=10)
+    export_button.grid(row=6, columnspan=2, pady=10)
 
     log_button = tk.Button(frame, text="Просмотреть логи", command=view_log)
-    log_button.grid(row=5, columnspan=2, pady=10)
+    log_button.grid(row=7, columnspan=2, pady=10)
+
+    audit_log_button = tk.Button(frame, text="История аудита", command=view_audit_log)
+    audit_log_button.grid(row=8, columnspan=2, pady=10)
 
 # Создаем главное окно
 root = tk.Tk()
