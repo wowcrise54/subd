@@ -1,8 +1,17 @@
+import os
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox, ttk, filedialog, scrolledtext
 import psycopg2
 import pandas as pd
-from tkinter import filedialog
+import logging
+
+# Настройка логирования
+log_folder = 'logs'
+if not os.path.exists(log_folder):
+    os.makedirs(log_folder)
+
+logging.basicConfig(filename=os.path.join(log_folder, 'db_operations.log'), level=logging.INFO,
+                    format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Подключение к базе данных PostgreSQL
 def connect_db():
@@ -14,9 +23,10 @@ def connect_db():
             host="127.0.0.1",
             port="5432"
         )
+        logging.info("Подключение к базе данных установлено")
         return conn
     except Exception as e:
-        print(f"Ошибка подключения: {e}")
+        logging.error(f"Ошибка подключения к базе данных: {e}")
         return None
 
 def register():
@@ -39,8 +49,10 @@ def register():
             (username, email, phone, password, privilege)
         )
         conn.commit()
+        logging.info(f"Зарегистрирован новый пользователь: {username}")
         messagebox.showinfo("Успех", "Регистрация прошла успешно!")
     except Exception as e:
+        logging.error(f"Ошибка регистрации пользователя {username}: {e}")
         messagebox.showerror("Ошибка", f"Не удалось зарегистрироваться: {e}")
     finally:
         cursor.close()
@@ -65,11 +77,14 @@ def login():
         is_authenticated = cursor.fetchone()[0]
 
         if is_authenticated:
+            logging.info(f"Пользователь {username} успешно вошел в систему")
             messagebox.showinfo("Успех", f"Добро пожаловать, {username}!")
             show_main_interface()
         else:
+            logging.warning(f"Неудачная попытка входа для пользователя {username}")
             messagebox.showerror("Ошибка", "Неверное имя пользователя или пароль")
     except Exception as e:
+        logging.error(f"Ошибка входа пользователя {username}: {e}")
         messagebox.showerror("Ошибка", f"Не удалось выполнить вход: {e}")
     finally:
         cursor.close()
@@ -131,7 +146,7 @@ def show_login_form():
     
     register_label = tk.Label(root, text="Нет аккаунта? ")
     register_label.place(relx=0.5, rely=0.85, anchor='e')
-    register_link = tk.Label(root, text="Зарегистрироваться", fg="blue", cursor="hand2")
+    register_link = tk.Label(root, текст="Зарегистрироваться", fg="blue", cursor="hand2")
     register_link.place(relx=0.5, rely=0.85, anchor='w')
     register_link.bind("<Button-1>", lambda e: show_register_form())
 
@@ -161,7 +176,9 @@ def show_main_interface():
             rows = cursor.fetchall()
             for row in rows:
                 tree.insert("", tk.END, values=row)
+            logging.info(f"Просмотр данных из таблицы: {table}")
         except Exception as e:
+            logging.error(f"Ошибка просмотра данных из таблицы {table}: {e}")
             messagebox.showerror("Ошибка", f"Не удалось получить данные: {e}")
         finally:
             cursor.close()
@@ -183,8 +200,10 @@ def show_main_interface():
             file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
             if file_path:
                 df.to_excel(file_path, index=False)
+                logging.info(f"Экспорт данных из таблицы {table} в файл {file_path}")
                 messagebox.showinfo("Успех", f"Данные успешно экспортированы в {file_path}")
         except Exception as e:
+            logging.error(f"Ошибка экспорта данных из таблицы {table} в файл Excel: {e}")
             messagebox.showerror("Ошибка", f"Не удалось экспортировать данные: {e}")
         finally:
             cursor.close()
@@ -200,8 +219,10 @@ def show_main_interface():
         try:
             cursor.execute("SELECT category_id, category_name FROM categories")
             categories = cursor.fetchall()
+            logging.info("Получение категорий из таблицы categories")
             return categories
         except Exception as e:
+            logging.error(f"Ошибка получения категорий: {e}")
             messagebox.showerror("Ошибка", f"Не удалось получить категории: {e}")
             return []
         finally:
@@ -254,10 +275,11 @@ def show_main_interface():
                         (name, email, phone, password, privilege)
                     )
                     conn.commit()
+                    logging.info(f"Добавлен новый пользователь: {name}")
                     messagebox.showinfo("Успех", "Данные успешно добавлены!")
                     add_window.destroy()
-                    # Перезагрузите данные в основном интерфейсе, если необходимо
                 except Exception as e:
+                    logging.error(f"Ошибка добавления пользователя {name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось добавить данные: {e}")
                 finally:
                     cursor.close()
@@ -287,9 +309,11 @@ def show_main_interface():
                         (category_name,)
                     )
                     conn.commit()
+                    logging.info(f"Добавлена новая категория: {category_name}")
                     messagebox.showinfo("Успех", "Категория успешно добавлена!")
                     add_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка добавления категории {category_name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось добавить категорию: {e}")
                 finally:
                     cursor.close()
@@ -319,9 +343,11 @@ def show_main_interface():
                         (order_date,)
                     )
                     conn.commit()
+                    logging.info(f"Добавлена новая дата заказа: {order_date}")
                     messagebox.showinfo("Успех", "Дата заказа успешно добавлена!")
                     add_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка добавления даты заказа {order_date}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось добавить дату заказа: {e}")
                 finally:
                     cursor.close()
@@ -361,9 +387,11 @@ def show_main_interface():
                         (product_name, price, category)
                     )
                     conn.commit()
+                    logging.info(f"Добавлен новый продукт: {product_name}")
                     messagebox.showinfo("Успех", "Продукт успешно добавлен!")
                     add_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка добавления продукта {product_name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось добавить продукт: {e}")
                 finally:
                     cursor.close()
@@ -432,9 +460,11 @@ def show_main_interface():
                         (id, name, email, phone, password, privilege)
                     )
                     conn.commit()
+                    logging.info(f"Обновлены данные пользователя: {name}")
                     messagebox.showinfo("Успех", "Данные успешно обновлены!")
                     update_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка обновления данных пользователя {name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось обновить данные: {e}")
                 finally:
                     cursor.close()
@@ -466,9 +496,11 @@ def show_main_interface():
                         (id, category_name)
                     )
                     conn.commit()
+                    logging.info(f"Обновлена категория: {category_name}")
                     messagebox.showinfo("Успех", "Категория успешно обновлена!")
                     update_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка обновления категории {category_name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось обновить категорию: {e}")
                 finally:
                     cursor.close()
@@ -500,9 +532,11 @@ def show_main_interface():
                         (id, order_date)
                     )
                     conn.commit()
+                    logging.info(f"Обновлена дата заказа: {order_date}")
                     messagebox.showinfo("Успех", "Дата заказа успешно обновлена!")
                     update_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка обновления даты заказа {order_date}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось обновить дату заказа: {e}")
                 finally:
                     cursor.close()
@@ -546,9 +580,11 @@ def show_main_interface():
                         (id, product_name, price, category)
                     )
                     conn.commit()
+                    logging.info(f"Обновлен продукт: {product_name}")
                     messagebox.showinfo("Успех", "Продукт успешно обновлен!")
                     update_window.destroy()
                 except Exception as e:
+                    logging.error(f"Ошибка обновления продукта {product_name}: {e}")
                     messagebox.showerror("Ошибка", f"Не удалось обновить продукт: {e}")
                 finally:
                     cursor.close()
@@ -585,13 +621,28 @@ def show_main_interface():
             elif table == "products":
                 cursor.execute("CALL delete_product(%s)", (id,))
             conn.commit()
+            logging.info(f"Удалена запись с ID {id} из таблицы {table}")
             messagebox.showinfo("Успех", "Данные успешно удалены!")
             tree.delete(selected_item)
         except Exception as e:
+            logging.error(f"Ошибка удаления записи с ID {id} из таблицы {table}: {e}")
             messagebox.showerror("Ошибка", f"Не удалось удалить данные: {e}")
         finally:
             cursor.close()
             conn.close()
+
+    def view_log():
+        log_window = tk.Toplevel(root)
+        log_window.title("История операций")
+
+        st = scrolledtext.ScrolledText(log_window, width=80, height=20)
+        st.pack(padx=10, pady=10)
+
+        try:
+            with open(os.path.join(log_folder, 'db_operations.log'), 'r') as log_file:
+                st.insert(tk.END, log_file.read())
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось загрузить лог-файл: {e}")
 
     tree = ttk.Treeview(frame, columns=("ID", "Name", "Email", "Phone", "Password", "Privilege"), show="headings")
     tree.heading("ID", text="ID")
@@ -616,6 +667,9 @@ def show_main_interface():
 
     export_button = tk.Button(frame, text="Экспорт в WPS Office", command=export_to_excel)
     export_button.grid(row=4, columnspan=2, pady=10)
+
+    log_button = tk.Button(frame, text="Просмотреть логи", command=view_log)
+    log_button.grid(row=5, columnspan=2, pady=10)
 
 # Создаем главное окно
 root = tk.Tk()

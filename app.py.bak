@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox, ttk
 import psycopg2
+import pandas as pd
+from tkinter import filedialog
 
 # Подключение к базе данных PostgreSQL
 def connect_db():
@@ -165,6 +167,29 @@ def show_main_interface():
             cursor.close()
             conn.close()
 
+    def export_to_excel():
+        table = table_choice.get()
+        conn = connect_db()
+        if not conn:
+            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            return
+
+        cursor = conn.cursor()
+        try:
+            cursor.execute(f'SELECT * FROM {table}')
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            df = pd.DataFrame(rows, columns=columns)
+            file_path = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel files", "*.xlsx")])
+            if file_path:
+                df.to_excel(file_path, index=False)
+                messagebox.showinfo("Успех", f"Данные успешно экспортированы в {file_path}")
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось экспортировать данные: {e}")
+        finally:
+            cursor.close()
+            conn.close()
+
     def get_categories():
         conn = connect_db()
         if not conn:
@@ -321,7 +346,7 @@ def show_main_interface():
             def add_data_to_db():
                 product_name = product_name_entry.get()
                 price = price_entry.get()
-                category_id = int(category_choice.get().split(":")[0])  # Преобразование в целое число
+                category = category_choice.get().split(": ")[1]  # Получаем название категории
 
                 conn = connect_db()
                 if not conn:
@@ -333,7 +358,7 @@ def show_main_interface():
                 try:
                     cursor.execute(
                         "CALL add_product(%s, %s, %s)",
-                        (product_name, price, category_id)
+                        (product_name, price, category)
                     )
                     conn.commit()
                     messagebox.showinfo("Успех", "Продукт успешно добавлен!")
@@ -499,14 +524,14 @@ def show_main_interface():
 
             tk.Label(update_window, text="Категория:").grid(row=2, column=0, padx=10, pady=5)
             category_choice = ttk.Combobox(update_window, values=[f"{cat[0]}: {cat[1]}" for cat in get_categories()])
-            category_choice.set(f"{record[3]}: {record[4]}")  # Устанавливаем текущее значение
             category_choice.grid(row=2, column=1, padx=10, pady=5)
+            category_choice.set(f"{record[3]}: {record[4]}")
 
             def update_data_to_db():
                 id = record[0]
                 product_name = product_name_entry.get()
                 price = price_entry.get()
-                category_id = int(category_choice.get().split(":")[0])  # Преобразование в целое число
+                category = category_choice.get().split(": ")[1]  # Получаем название категории
 
                 conn = connect_db()
                 if not conn:
@@ -518,7 +543,7 @@ def show_main_interface():
                 try:
                     cursor.execute(
                         "CALL update_product(%s, %s, %s, %s)",
-                        (id, product_name, price, category_id)
+                        (id, product_name, price, category)
                     )
                     conn.commit()
                     messagebox.showinfo("Успех", "Продукт успешно обновлен!")
@@ -588,6 +613,9 @@ def show_main_interface():
 
     delete_button = tk.Button(frame, text="Удалить данные", command=delete_data)
     delete_button.grid(row=3, column=1, padx=10, pady=5)
+
+    export_button = tk.Button(frame, text="Экспорт в WPS Office", command=export_to_excel)
+    export_button.grid(row=4, columnspan=2, pady=10)
 
 # Создаем главное окно
 root = tk.Tk()
