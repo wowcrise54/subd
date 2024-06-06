@@ -14,6 +14,63 @@ if not os.path.exists(log_folder):
 logging.basicConfig(filename=os.path.join(log_folder, 'db_operations.log'), level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 
+# Глобальная переменная для языка
+current_language = 'ru'
+
+# Переводы
+translations = {
+    'ru': {
+        'username': 'Имя пользователя:',
+        'password': 'Пароль:',
+        'email': 'Email:',
+        'phone': 'Телефон:',
+        'register': 'Зарегистрироваться',
+        'login': 'Войти',
+        'register_success': 'Регистрация прошла успешно!',
+        'register_error': 'Не удалось зарегистрироваться: {}',
+        'login_success': 'Добро пожаловать, {}!',
+        'login_error': 'Неверное имя пользователя или пароль',
+        'db_connect_error': 'Не удалось подключиться к базе данных',
+        'view_data': 'Просмотреть данные',
+        'add_data': 'Добавить данные',
+        'update_data': 'Обновить данные',
+        'delete_data': 'Удалить данные',
+        'export_to_excel': 'Экспорт в WPS Office',
+        'view_log': 'Просмотреть логи',
+        'change_language': 'Сменить язык',
+        'table': 'Выберите таблицу:',
+        'search': 'Поиск:',
+        'column': 'Колонка:',
+        'already_have_account': 'Уже есть аккаунт?',
+        'no_account': 'Нет аккаунта?'
+    },
+    'en': {
+        'username': 'Username:',
+        'password': 'Password:',
+        'email': 'Email:',
+        'phone': 'Phone:',
+        'register': 'Register',
+        'login': 'Login',
+        'register_success': 'Registration successful!',
+        'register_error': 'Registration failed: {}',
+        'login_success': 'Welcome, {}!',
+        'login_error': 'Invalid username or password',
+        'db_connect_error': 'Failed to connect to the database',
+        'view_data': 'View Data',
+        'add_data': 'Add Data',
+        'update_data': 'Update Data',
+        'delete_data': 'Delete Data',
+        'export_to_excel': 'Export to Excel',
+        'view_log': 'View Logs',
+        'change_language': 'Change Language',
+        'table': 'Select Table:',
+        'search': 'Search:',
+        'column': 'Column:',
+        'already_have_account': 'Already have an account?',
+        'no_account': 'No account?'
+    }
+}
+
 # Подключение к базе данных PostgreSQL
 def connect_db():
     try:
@@ -30,6 +87,14 @@ def connect_db():
         logging.error(f"Ошибка подключения к базе данных: {e}")
         return None
 
+def get_translation(key):
+    return translations[current_language].get(key, key)
+
+def change_language():
+    global current_language
+    current_language = 'en' if current_language == 'ru' else 'ru'
+    show_register_form()
+
 def register():
     username = username_entry.get()
     password = password_entry.get()
@@ -39,7 +104,7 @@ def register():
 
     conn = connect_db()
     if not conn:
-        messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+        messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
         return
 
     cursor = conn.cursor()
@@ -51,10 +116,10 @@ def register():
         )
         conn.commit()
         logging.info(f"Зарегистрирован новый пользователь: {username}")
-        messagebox.showinfo("Успех", "Регистрация прошла успешно!")
+        messagebox.showinfo(get_translation('register_success'), get_translation('register_success'))
     except Exception as e:
         logging.error(f"Ошибка регистрации пользователя {username}: {e}")
-        messagebox.showerror("Ошибка", f"Не удалось зарегистрироваться: {e}")
+        messagebox.showerror(get_translation('register_error').format(e), get_translation('register_error').format(e))
     finally:
         cursor.close()
         conn.close()
@@ -65,7 +130,7 @@ def login():
 
     conn = connect_db()
     if not conn:
-        messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+        messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
         return
 
     cursor = conn.cursor()
@@ -79,14 +144,14 @@ def login():
 
         if is_authenticated:
             logging.info(f"Пользователь {username} успешно вошел в систему")
-            messagebox.showinfo("Успех", f"Добро пожаловать, {username}!")
+            messagebox.showinfo(get_translation('login_success').format(username), get_translation('login_success').format(username))
             show_main_interface()
         else:
             logging.warning(f"Неудачная попытка входа для пользователя {username}")
-            messagebox.showerror("Ошибка", "Неверное имя пользователя или пароль")
+            messagebox.showerror(get_translation('login_error'), get_translation('login_error'))
     except Exception as e:
         logging.error(f"Ошибка входа пользователя {username}: {e}")
-        messagebox.showerror("Ошибка", f"Не удалось выполнить вход: {e}")
+        messagebox.showerror(get_translation('login_error').format(e), get_translation('login_error').format(e))
     finally:
         cursor.close()
         conn.close()
@@ -100,28 +165,28 @@ def show_register_form():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
     
-    tk.Label(frame, text="Имя пользователя:").grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('username')).grid(row=0, column=0, padx=10, pady=5)
     username_entry = tk.Entry(frame)
     username_entry.grid(row=0, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('password')).grid(row=1, column=0, padx=10, pady=5)
     password_entry = tk.Entry(frame, show="*")
     password_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    tk.Label(frame, text="Email:").grid(row=2, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('email')).grid(row=2, column=0, padx=10, pady=5)
     email_entry = tk.Entry(frame)
     email_entry.grid(row=2, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Телефон:").grid(row=3, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('phone')).grid(row=3, column=0, padx=10, pady=5)
     phone_entry = tk.Entry(frame)
     phone_entry.grid(row=3, column=1, padx=10, pady=5)
     
-    register_button = tk.Button(frame, text="Зарегистрироваться", command=register)
+    register_button = tk.Button(frame, text=get_translation('register'), command=register)
     register_button.grid(row=4, columnspan=2, pady=10)
     
-    login_label = tk.Label(root, text="Уже есть аккаунт? ")
+    login_label = tk.Label(root, text=get_translation('already_have_account'))
     login_label.place(relx=0.5, rely=0.85, anchor='e')
-    login_link = tk.Label(root, text="Войти", fg="blue", cursor="hand2")
+    login_link = tk.Label(root, text=get_translation('login'), fg="blue", cursor="hand2")
     login_link.place(relx=0.5, rely=0.85, anchor='w')
     login_link.bind("<Button-1>", lambda e: show_login_form())
 
@@ -134,20 +199,20 @@ def show_login_form():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
     
-    tk.Label(frame, text="Имя пользователя:").grid(row=0, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('username')).grid(row=0, column=0, padx=10, pady=5)
     username_entry = tk.Entry(frame)
     username_entry.grid(row=0, column=1, padx=10, pady=5)
     
-    tk.Label(frame, text="Пароль:").grid(row=1, column=0, padx=10, pady=5)
+    tk.Label(frame, text=get_translation('password')).grid(row=1, column=0, padx=10, pady=5)
     password_entry = tk.Entry(frame, show="*")
     password_entry.grid(row=1, column=1, padx=10, pady=5)
     
-    login_button = tk.Button(frame, text="Войти", command=login)
+    login_button = tk.Button(frame, text=get_translation('login'), command=login)
     login_button.grid(row=2, columnspan=2, pady=10)
     
-    register_label = tk.Label(root, text="Нет аккаунта? ")
+    register_label = tk.Label(root, text=get_translation('no_account'))
     register_label.place(relx=0.5, rely=0.85, anchor='e')
-    register_link = tk.Label(root, text="Зарегистрироваться", fg="blue", cursor="hand2")
+    register_link = tk.Label(root, text=get_translation('register'), fg="blue", cursor="hand2")
     register_link.place(relx=0.5, rely=0.85, anchor='w')
     register_link.bind("<Button-1>", lambda e: show_register_form())
 
@@ -158,18 +223,18 @@ def show_main_interface():
     frame = tk.Frame(root, width=frame_width, height=frame_height)
     frame.place(relx=0.5, rely=0.5, anchor='center')
 
-    table_label = tk.Label(frame, text="Выберите таблицу:")
+    table_label = tk.Label(frame, text=get_translation('table'))
     table_label.grid(row=0, column=0, padx=10, pady=5)
     table_choice = ttk.Combobox(frame, values=["customers", "orders", "products", "categories", "orderdate"])
     table_choice.grid(row=0, column=1, padx=10, pady=5)
     table_choice.current(0)  # Установить значение по умолчанию
 
-    search_label = tk.Label(frame, text="Поиск:")
+    search_label = tk.Label(frame, text=get_translation('search'))
     search_label.grid(row=1, column=0, padx=10, pady=5)
     search_entry = tk.Entry(frame)
     search_entry.grid(row=1, column=1, padx=10, pady=5)
 
-    column_label = tk.Label(frame, text="Колонка:")
+    column_label = tk.Label(frame, text=get_translation('column'))
     column_label.grid(row=2, column=0, padx=10, pady=5)
     column_choice = ttk.Combobox(frame, values=["customer_id", "customer_name", "customer_email", "customer_phone", "customers_password", "customers_privellege"])
     column_choice.grid(row=2, column=1, padx=10, pady=5)
@@ -181,7 +246,7 @@ def show_main_interface():
         column = column_choice.get()
         conn = connect_db()
         if not conn:
-            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
             return
 
         cursor = conn.cursor()
@@ -206,7 +271,7 @@ def show_main_interface():
         table = table_choice.get()
         conn = connect_db()
         if not conn:
-            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
             return
 
         cursor = conn.cursor()
@@ -230,7 +295,7 @@ def show_main_interface():
     def get_categories():
         conn = connect_db()
         if not conn:
-            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
             return []
         
         cursor = conn.cursor()
@@ -253,23 +318,23 @@ def show_main_interface():
         add_window.title("Добавить данные")
 
         if table == "customers":
-            tk.Label(add_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('username')).grid(row=0, column=0, padx=10, pady=5)
             name_entry = tk.Entry(add_window)
             name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('email')).grid(row=1, column=0, padx=10, pady=5)
             email_entry = tk.Entry(add_window)
             email_entry.grid(row=1, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('phone')).grid(row=2, column=0, padx=10, pady=5)
             phone_entry = tk.Entry(add_window)
             phone_entry.grid(row=2, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('password')).grid(row=3, column=0, padx=10, pady=5)
             password_entry = tk.Entry(add_window, show="*")
             password_entry.grid(row=3, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('privilege')).grid(row=4, column=0, padx=10, pady=5)
             privilege_entry = tk.Entry(add_window)
             privilege_entry.grid(row=4, column=1, padx=10, pady=5)
 
@@ -282,7 +347,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -303,11 +368,11 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button = tk.Button(add_window, text=get_translation('add_data'), command=add_data_to_db)
             add_button.grid(row=5, columnspan=2, pady=10)
 
         elif table == "categories":
-            tk.Label(add_window, text="Название категории:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('category_name')).grid(row=0, column=0, padx=10, pady=5)
             category_name_entry = tk.Entry(add_window)
             category_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
@@ -316,7 +381,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -337,11 +402,11 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button = tk.Button(add_window, text=get_translation('add_data'), command=add_data_to_db)
             add_button.grid(row=1, columnspan=2, pady=10)
 
         elif table == "orderdate":
-            tk.Label(add_window, text="Дата заказа:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('order_date')).grid(row=0, column=0, padx=10, pady=5)
             order_date_entry = tk.Entry(add_window)
             order_date_entry.grid(row=0, column=1, padx=10, pady=5)
 
@@ -350,7 +415,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -371,19 +436,19 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button = tk.Button(add_window, text=get_translation('add_data'), command=add_data_to_db)
             add_button.grid(row=1, columnspan=2, pady=10)
 
         elif table == "products":
-            tk.Label(add_window, text="Название продукта:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('product_name')).grid(row=0, column=0, padx=10, pady=5)
             product_name_entry = tk.Entry(add_window)
             product_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Цена:").grid(row=1, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('price')).grid(row=1, column=0, padx=10, pady=5)
             price_entry = tk.Entry(add_window)
             price_entry.grid(row=1, column=1, padx=10, pady=5)
 
-            tk.Label(add_window, text="Категория:").grid(row=2, column=0, padx=10, pady=5)
+            tk.Label(add_window, text=get_translation('category')).grid(row=2, column=0, padx=10, pady=5)
             category_choice = ttk.Combobox(add_window, values=[f"{cat[0]}: {cat[1]}" for cat in get_categories()])
             category_choice.grid(row=2, column=1, padx=10, pady=5)
 
@@ -394,7 +459,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -415,7 +480,7 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            add_button = tk.Button(add_window, text="Добавить", command=add_data_to_db)
+            add_button = tk.Button(add_window, text=get_translation('add_data'), command=add_data_to_db)
             add_button.grid(row=3, columnspan=2, pady=10)
 
     def show_update_data_form():
@@ -432,27 +497,27 @@ def show_main_interface():
         update_window.title("Обновить данные")
 
         if table == "customers":
-            tk.Label(update_window, text="Имя:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('username')).grid(row=0, column=0, padx=10, pady=5)
             name_entry = tk.Entry(update_window)
             name_entry.insert(0, record[1])
             name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Email:").grid(row=1, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('email')).grid(row=1, column=0, padx=10, pady=5)
             email_entry = tk.Entry(update_window)
             email_entry.insert(0, record[2])
             email_entry.grid(row=1, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Телефон:").grid(row=2, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('phone')).grid(row=2, column=0, padx=10, pady=5)
             phone_entry = tk.Entry(update_window)
             phone_entry.insert(0, record[3])
             phone_entry.grid(row=2, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Пароль:").grid(row=3, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('password')).grid(row=3, column=0, padx=10, pady=5)
             password_entry = tk.Entry(update_window, show="*")
             password_entry.insert(0, record[4])
             password_entry.grid(row=3, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Привилегия:").grid(row=4, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('privilege')).grid(row=4, column=0, padx=10, pady=5)
             privilege_entry = tk.Entry(update_window)
             privilege_entry.insert(0, record[5])
             privilege_entry.grid(row=4, column=1, padx=10, pady=5)
@@ -467,7 +532,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -488,11 +553,11 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button = tk.Button(update_window, text=get_translation('update_data'), command=update_data_to_db)
             update_button.grid(row=5, columnspan=2, pady=10)
 
         elif table == "categories":
-            tk.Label(update_window, text="Название категории:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('category_name')).grid(row=0, column=0, padx=10, pady=5)
             category_name_entry = tk.Entry(update_window)
             category_name_entry.insert(0, record[1])
             category_name_entry.grid(row=0, column=1, padx=10, pady=5)
@@ -503,7 +568,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -524,11 +589,11 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button = tk.Button(update_window, text=get_translation('update_data'), command=update_data_to_db)
             update_button.grid(row=1, columnspan=2, pady=10)
 
         elif table == "orderdate":
-            tk.Label(update_window, text="Дата заказа:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('order_date')).grid(row=0, column=0, padx=10, pady=5)
             order_date_entry = tk.Entry(update_window)
             order_date_entry.insert(0, record[1])
             order_date_entry.grid(row=0, column=1, padx=10, pady=5)
@@ -539,7 +604,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -560,21 +625,21 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button = tk.Button(update_window, text=get_translation('update_data'), command=update_data_to_db)
             update_button.grid(row=1, columnspan=2, pady=10)
 
         elif table == "products":
-            tk.Label(update_window, text="Название продукта:").grid(row=0, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('product_name')).grid(row=0, column=0, padx=10, pady=5)
             product_name_entry = tk.Entry(update_window)
             product_name_entry.insert(0, record[1])
             product_name_entry.grid(row=0, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Цена:").grid(row=1, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('price')).grid(row=1, column=0, padx=10, pady=5)
             price_entry = tk.Entry(update_window)
             price_entry.insert(0, record[2])
             price_entry.grid(row=1, column=1, padx=10, pady=5)
 
-            tk.Label(update_window, text="Категория:").grid(row=2, column=0, padx=10, pady=5)
+            tk.Label(update_window, text=get_translation('category')).grid(row=2, column=0, padx=10, pady=5)
             category_choice = ttk.Combobox(update_window, values=[f"{cat[0]}: {cat[1]}" for cat in get_categories()])
             category_choice.grid(row=2, column=1, padx=10, pady=5)
             category_choice.set(f"{record[3]}: {record[4]}")
@@ -587,7 +652,7 @@ def show_main_interface():
 
                 conn = connect_db()
                 if not conn:
-                    messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+                    messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
                     return
 
                 cursor = conn.cursor()
@@ -608,7 +673,7 @@ def show_main_interface():
                     cursor.close()
                     conn.close()
 
-            update_button = tk.Button(update_window, text="Обновить", command=update_data_to_db)
+            update_button = tk.Button(update_window, text=get_translation('update_data'), command=update_data_to_db)
             update_button.grid(row=3, columnspan=2, pady=10)
 
     def delete_data():
@@ -624,7 +689,7 @@ def show_main_interface():
 
         conn = connect_db()
         if not conn:
-            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
+            messagebox.showerror(get_translation('db_connect_error'), get_translation('db_connect_error'))
             return
 
         cursor = conn.cursor()
@@ -651,7 +716,7 @@ def show_main_interface():
 
     def view_log():
         log_window = tk.Toplevel(root)
-        log_window.title("История операций")
+        log_window.title(get_translation('view_log'))
 
         st = scrolledtext.ScrolledText(log_window, width=80, height=20)
         st.pack(padx=10, pady=10)
@@ -664,61 +729,35 @@ def show_main_interface():
             logging.error(f"Ошибка при просмотре истории операций: {e}")
             messagebox.showerror("Ошибка", f"Не удалось загрузить историю операций: {e}")
 
-    def view_audit_log():
-        audit_window = tk.Toplevel(root)
-        audit_window.title("История аудита")
-
-        st = scrolledtext.ScrolledText(audit_window, width=100, height=30)
-        st.pack(padx=10, pady=10)
-
-        conn = connect_db()
-        if not conn:
-            messagebox.showerror("Ошибка", "Не удалось подключиться к базе данных")
-            return
-
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT * FROM audit_log ORDER BY timestamp DESC")
-            rows = cursor.fetchall()
-            for row in rows:
-                st.insert(tk.END, f"{row}\n")
-            logging.info("Просмотр истории аудита")
-        except Exception as e:
-            logging.error(f"Ошибка при просмотре истории аудита: {e}")
-            messagebox.showerror("Ошибка", f"Не удалось получить данные аудита: {e}")
-        finally:
-            cursor.close()
-            conn.close()
-
     tree = ttk.Treeview(frame, columns=("ID", "Name", "Email", "Phone", "Password", "Privilege"), show="headings")
     tree.heading("ID", text="ID")
-    tree.heading("Name", text="Name")
-    tree.heading("Email", text="Email")
-    tree.heading("Phone", text="Phone")
-    tree.heading("Password", text="Password")
-    tree.heading("Privilege", text="Privilege")
+    tree.heading("Name", text=get_translation('username'))
+    tree.heading("Email", text=get_translation('email'))
+    tree.heading("Phone", text=get_translation('phone'))
+    tree.heading("Password", text=get_translation('password'))
+    tree.heading("Privilege", text=get_translation('privilege'))
     tree.grid(row=3, columnspan=2, pady=10)
 
-    view_button = tk.Button(frame, text="Просмотреть данные", command=view_data)
+    view_button = tk.Button(frame, text=get_translation('view_data'), command=view_data)
     view_button.grid(row=4, column=0, padx=10, pady=5)
 
-    add_button = tk.Button(frame, text="Добавить данные", command=show_add_data_form)
+    add_button = tk.Button(frame, text=get_translation('add_data'), command=show_add_data_form)
     add_button.grid(row=4, column=1, padx=10, pady=5)
 
-    update_button = tk.Button(frame, text="Обновить данные", command=show_update_data_form)
+    update_button = tk.Button(frame, text=get_translation('update_data'), command=show_update_data_form)
     update_button.grid(row=5, column=0, padx=10, pady=5)
 
-    delete_button = tk.Button(frame, text="Удалить данные", command=delete_data)
+    delete_button = tk.Button(frame, text=get_translation('delete_data'), command=delete_data)
     delete_button.grid(row=5, column=1, padx=10, pady=5)
 
-    export_button = tk.Button(frame, text="Экспорт в WPS Office", command=export_to_excel)
+    export_button = tk.Button(frame, text=get_translation('export_to_excel'), command=export_to_excel)
     export_button.grid(row=6, columnspan=2, pady=10)
 
-    log_button = tk.Button(frame, text="Просмотреть логи", command=view_log)
+    log_button = tk.Button(frame, text=get_translation('view_log'), command=view_log)
     log_button.grid(row=7, columnspan=2, pady=10)
 
-    audit_log_button = tk.Button(frame, text="История аудита", command=view_audit_log)
-    audit_log_button.grid(row=8, columnspan=2, pady=10)
+    change_language_button = tk.Button(frame, text=get_translation('change_language'), command=change_language)
+    change_language_button.grid(row=8, columnspan=2, pady=10)
 
 # Создаем главное окно
 root = tk.Tk()
